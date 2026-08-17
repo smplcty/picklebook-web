@@ -1,4 +1,8 @@
+import { mockApiFetch } from "@/lib/mock-api";
+
 export const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+// The UI runs against realistic local data unless explicitly connected to the API.
+const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
 
 function requestHeaders(init: RequestInit, token?: string) {
   const headers = new Headers(init.headers);
@@ -8,6 +12,7 @@ function requestHeaders(init: RequestInit, token?: string) {
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  if (useMockApi) return mockApiFetch(path, init);
   const token = typeof window === "undefined" ? undefined : localStorage.getItem("accessToken") ?? undefined;
   let response = await fetch(`${apiUrl}/api${path}`, { ...init, credentials: "include", headers: requestHeaders(init, token) });
   if (response.status === 401 && !path.startsWith("/auth/")) {
